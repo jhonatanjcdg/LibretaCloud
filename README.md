@@ -44,7 +44,7 @@ docker-compose up --build
 3. Iniciar: `npm run dev`
 
 ## 👥 Autores
-- [Tu Nombre/Usuario] - Desarrollo Principal
+- Jhonatan Juan Carlos Delgado Gómez - Desarrollo Principal
 - LibretaCloud Team
 
 ## 📄 Licencia
