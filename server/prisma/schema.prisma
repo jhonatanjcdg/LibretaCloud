@@ -1,3 +1,12 @@
+// 🚀 Comandos Útiles de Prisma:
+// 
+// 1. npx prisma generate      - Genera el Cliente de Prisma según tu esquema (ejecutar tras cambios).
+// 2. npx prisma db push       - Sincroniza el esquema con la BD sin crear archivos de migración (rápido para desarrollo).
+// 3. npx prisma migrate dev   - Crea y aplica una migración a la base de datos (guarda historial).
+// 4. npx prisma studio        - Abre una interfaz gráfica para ver y editar los datos de tu BD.
+// 5. npx prisma validate      - Verifica que el esquema no tenga errores de sintaxis o relaciones.
+// 6. npx prisma format        - Formatea automáticamente este archivo schema.prisma.
+
 generator client {
   provider      = "prisma-client-js"
   binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
