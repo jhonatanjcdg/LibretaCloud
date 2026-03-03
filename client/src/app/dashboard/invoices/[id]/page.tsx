@@ -12,6 +12,15 @@ export default function InvoiceDetailPage() {
     const router = useRouter();
     const [invoice, setInvoice] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+    const [paymentData, setPaymentData] = useState({
+        amount: 0,
+        method: 'TRANSFER' as any,
+        note: ''
+    });
+
+    const totalPaid = invoice?.payments?.reduce((sum: number, p: any) => sum + Number(p.amount), 0) || 0;
+    const balance = invoice ? Number(invoice.total) - totalPaid : 0;
 
     useEffect(() => {
         loadInvoice();
@@ -70,17 +79,6 @@ export default function InvoiceDetailPage() {
         };
         return colors[status] || colors.DRAFT;
     };
-
-    const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-    const [paymentData, setPaymentData] = useState({
-        amount: 0,
-        method: 'TRANSFER' as any,
-        note: ''
-    });
-
-    const totalPaid = invoice.payments?.reduce((sum: number, p: any) => sum + Number(p.amount), 0) || 0;
-    const balance = Number(invoice.total) - totalPaid;
-
     const handlePayment = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
@@ -115,7 +113,12 @@ export default function InvoiceDetailPage() {
 
                 <div className="flex justify-between items-start">
                     <div>
-                        <h1 className="text-3xl font-bold mb-2">Factura #{invoice.number || invoice.id.slice(0, 8)}</h1>
+                        <h1 className="text-3xl font-bold mb-2">
+                            {invoice.type === 'QUOTE' ? 'Cotización' :
+                                invoice.type === 'CREDIT_NOTE' ? 'Nota Crédito' :
+                                    invoice.type === 'DEBIT_NOTE' ? 'Nota Débito' : 'Factura'}
+                            #{invoice.number || invoice.id.slice(0, 8)}
+                        </h1>
                         <p className="text-gray-400">{new Date(invoice.createdAt).toLocaleDateString('es-ES', {
                             year: 'numeric',
                             month: 'long',

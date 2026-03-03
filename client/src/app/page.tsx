@@ -43,9 +43,14 @@ export default function LandingPage() {
             <a href="#features" className="hover:text-white transition-colors">Funcionalidades</a>
             <a href="#pricing" className="hover:text-white transition-colors">Precios</a>
             <a href="#about" className="hover:text-white transition-colors">Nosotros</a>
-            <Link href="/auth/register" className="px-6 py-2.5 bg-white text-black rounded-full font-bold hover:bg-gray-200 transition-all">
-              Probar Gratis
-            </Link>
+            <div className="flex items-center gap-4 ml-4">
+              <Link href="/auth/login" className="text-white hover:text-gray-300 transition-colors">
+                Iniciar Sesión
+              </Link>
+              <Link href="/auth/register" className="px-6 py-2.5 bg-white text-black rounded-full font-bold hover:bg-gray-200 transition-all">
+                Probar Gratis
+              </Link>
+            </div>
           </div>
 
           {/* Mobile Toggle */}
@@ -64,6 +69,10 @@ export default function LandingPage() {
             <Link href="#features" onClick={() => setIsMenuOpen(false)} className="text-gray-400 hover:text-white transition-colors">Funcionalidades</Link>
             <Link href="#pricing" onClick={() => setIsMenuOpen(false)} className="text-gray-400 hover:text-white transition-colors">Precios</Link>
             <Link href="#about" onClick={() => setIsMenuOpen(false)} className="text-gray-400 hover:text-white transition-colors">Nosotros</Link>
+            <hr className="border-white/10" />
+            <Link href="/auth/login" onClick={() => setIsMenuOpen(false)} className="text-white text-center font-medium">
+              Iniciar Sesión
+            </Link>
             <Link href="/auth/register" className="px-6 py-3 bg-white text-black rounded-xl font-bold text-center">
               Probar Gratis
             </Link>

@@ -1,10 +1,10 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
 import { fetchAPI } from "@/lib/api";
-import { Plus, FileText, Calendar, DollarSign, Trash2, Edit2, Search, Filter } from "lucide-react";
 import { motion } from "framer-motion";
+import { Edit2, FileText, Filter, Plus, Search, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export default function InvoicesPage() {
     const [invoices, setInvoices] = useState([]);
@@ -19,6 +19,7 @@ export default function InvoicesPage() {
     // Form State
     const [formData, setFormData] = useState({
         clientId: "",
+        type: "INVOICE",
         items: [{ productId: "", quantity: 1 }]
     });
 
@@ -95,7 +96,7 @@ export default function InvoicesPage() {
             });
             setIsModalOpen(false);
             setEditingInvoice(null);
-            setFormData({ clientId: "", items: [{ productId: "", quantity: 1 }] });
+            setFormData({ clientId: "", type: "INVOICE", items: [{ productId: "", quantity: 1 }] });
             loadInvoices();
         } catch (error) {
             alert("Error: " + error);
@@ -106,6 +107,7 @@ export default function InvoicesPage() {
         setEditingInvoice(invoice);
         setFormData({
             clientId: invoice.clientId,
+            type: invoice.type || "INVOICE",
             items: invoice.items.map((item: any) => ({
                 productId: item.productId,
                 quantity: item.quantity
@@ -144,12 +146,12 @@ export default function InvoicesPage() {
                 <button
                     onClick={() => {
                         setEditingInvoice(null);
-                        setFormData({ clientId: "", items: [{ productId: "", quantity: 1 }] });
+                        setFormData({ clientId: "", type: "INVOICE", items: [{ productId: "", quantity: 1 }] });
                         setIsModalOpen(true);
                     }}
                     className="flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white px-5 py-2.5 rounded-xl font-bold transition-colors shadow-lg shadow-green-500/20"
                 >
-                    <Plus className="w-5 h-5" /> Nueva Factura
+                    <Plus className="w-5 h-5" /> Nuevo Documento
                 </button>
             </div>
 
@@ -206,7 +208,19 @@ export default function InvoicesPage() {
                                     <FileText className="w-6 h-6" />
                                 </div>
                                 <div>
-                                    <h3 className="text-xl font-bold">Factura #{invoice.number || invoice.id.slice(0, 8)}</h3>
+                                    <div className="flex items-center gap-2">
+                                        <h3 className="text-xl font-bold">
+                                            {invoice.type === 'QUOTE' ? 'Cotización' :
+                                                invoice.type === 'CREDIT_NOTE' ? 'Nota Crédito' :
+                                                    invoice.type === 'DEBIT_NOTE' ? 'Nota Débito' : 'Factura'}
+                                            #{invoice.number || invoice.id.slice(0, 8)}
+                                        </h3>
+                                        {invoice.type !== 'INVOICE' && (
+                                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-white/10 text-gray-400 uppercase tracking-wider">
+                                                {invoice.type}
+                                            </span>
+                                        )}
+                                    </div>
                                     <p className="text-gray-400 text-sm">{invoice.client?.name || "Cliente desconocido"}</p>
                                 </div>
                             </div>
@@ -249,19 +263,35 @@ export default function InvoicesPage() {
                     <div className="bg-[#111] border border-white/10 w-full max-w-2xl rounded-2xl p-6 my-8">
                         <h2 className="text-2xl font-bold mb-6">{editingInvoice ? 'Editar Factura' : 'Nueva Factura'}</h2>
                         <form onSubmit={handleSubmit} className="space-y-6">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-400 mb-2">Cliente</label>
-                                <select
-                                    className="w-full bg-[#1a1a1a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500 appearance-none"
-                                    value={formData.clientId}
-                                    onChange={e => setFormData({ ...formData, clientId: e.target.value })}
-                                    required
-                                >
-                                    <option value="" className="bg-[#1a1a1a] text-white">Seleccionar cliente...</option>
-                                    {clients.map((client: any) => (
-                                        <option key={client.id} value={client.id} className="bg-[#1a1a1a] text-white">{client.name}</option>
-                                    ))}
-                                </select>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-400 mb-2">Tipo de Documento</label>
+                                    <select
+                                        className="w-full bg-[#1a1a1a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500 appearance-none text-sm font-bold"
+                                        value={formData.type}
+                                        onChange={e => setFormData({ ...formData, type: e.target.value })}
+                                        required
+                                    >
+                                        <option value="INVOICE">Factura de Venta</option>
+                                        <option value="QUOTE">Cotización</option>
+                                        <option value="CREDIT_NOTE">Nota Crédito</option>
+                                        <option value="DEBIT_NOTE">Nota Débito</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-400 mb-2">Cliente</label>
+                                    <select
+                                        className="w-full bg-[#1a1a1a] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500 appearance-none"
+                                        value={formData.clientId}
+                                        onChange={e => setFormData({ ...formData, clientId: e.target.value })}
+                                        required
+                                    >
+                                        <option value="" className="bg-[#1a1a1a] text-white">Seleccionar cliente...</option>
+                                        {clients.map((client: any) => (
+                                            <option key={client.id} value={client.id} className="bg-[#1a1a1a] text-white">{client.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
                             </div>
 
                             <div>
@@ -325,7 +355,8 @@ export default function InvoicesPage() {
                                     type="submit"
                                     className="flex-1 bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-xl transition-colors"
                                 >
-                                    {editingInvoice ? 'Guardar Cambios' : 'Crear Factura'}
+                                    {editingInvoice ? 'Guardar Cambios' :
+                                        formData.type === 'QUOTE' ? 'Crear Cotización' : 'Crear Documento'}
                                 </button>
                             </div>
                         </form>

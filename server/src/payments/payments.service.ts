@@ -16,8 +16,8 @@ export class PaymentsService {
             });
 
             // 2. Get the invoice and all its payments to update status
-            const invoice = await tx.invoice.findUnique({
-                where: { id: invoiceId },
+            const invoice = await tx.invoice.findFirst({
+                where: { id: invoiceId, deletedAt: null },
                 include: { payments: true },
             });
 
@@ -70,8 +70,8 @@ export class PaymentsService {
             await tx.payment.delete({ where: { id } });
 
             // Update invoice status after deletion
-            const invoice = await tx.invoice.findUnique({
-                where: { id: invoiceId },
+            const invoice = await tx.invoice.findFirst({
+                where: { id: invoiceId, deletedAt: null },
                 include: { payments: true },
             });
 
