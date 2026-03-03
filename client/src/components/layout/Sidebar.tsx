@@ -1,23 +1,24 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import {
+    BarChart3,
+    CreditCard,
+    FileText,
+    History,
+    LayoutDashboard,
+    LogOut,
+    Package,
+    Settings,
+    Tag,
+    UserCog,
+    Users,
+    Zap
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-    LayoutDashboard,
-    Package,
-    Users,
-    FileText,
-    Settings,
-    LogOut,
-    Menu,
-    X,
-    Zap,
-    BarChart3,
-    UserCog
-} from "lucide-react";
-import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 
 export function Sidebar() {
     const pathname = usePathname();
@@ -33,8 +34,11 @@ export function Sidebar() {
     const links = [
         { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
         { href: "/dashboard/products", icon: Package, label: "Productos" },
+        { href: "/dashboard/inventory", icon: History, label: "Inventario" },
+        { href: "/dashboard/categories", icon: Tag, label: "Categorías" },
         { href: "/dashboard/clients", icon: Users, label: "Clientes" },
         { href: "/dashboard/invoices", icon: FileText, label: "Facturas" },
+        { href: "/dashboard/payments", icon: CreditCard, label: "Pagos" },
         { href: "/dashboard/reports", icon: BarChart3, label: "Reportes" },
         ...(user?.role === 'ADMIN' ? [{ href: "/dashboard/users", icon: UserCog, label: "Usuarios" }] : []),
         { href: "/dashboard/settings", icon: Settings, label: "Configuración" },

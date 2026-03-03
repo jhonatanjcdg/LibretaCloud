@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -15,85 +16,103 @@ model User {
   role      Role     @default(USER)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  company   Company? @relation(fields: [companyId], references: [id])
   companyId String?
+  company   Company? @relation(fields: [companyId], references: [id])
 }
 
 model Company {
-  id        String    @id @default(uuid())
-  name      String
-  nit       String    @unique
-  address   String?
-  phone     String?
-  email     String?
-  website   String?
-  logoUrl   String?
-  defaultTaxRate Decimal @default(19)
-  users     User[]
-  clients   Client[]
-  products  Product[]
-  invoices  Invoice[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id             String     @id @default(uuid())
+  name           String
+  nit            String     @unique
+  address        String?
+  phone          String?
+  email          String?
+  website        String?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  defaultTaxRate Decimal    @default(19)
+  logoUrl        String?
+  categories     Category[]
+  clients        Client[]
+  invoices       Invoice[]
+  products       Product[]
+  stockMovements StockMovement[]
+  payments       Payment[]
+  users          User[]
 }
 
 model Client {
   id        String    @id @default(uuid())
   name      String
-  nit       String?   
+  nit       String?
   email     String?
   phone     String?
   address   String?
-  company   Company   @relation(fields: [companyId], references: [id])
   companyId String
-  invoices  Invoice[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+  company   Company   @relation(fields: [companyId], references: [id])
+  invoices  Invoice[]
 }
 
 model Product {
-  id          String        @id @default(uuid())
-  name        String
-  description String?
-  sku         String?
-  price       Decimal       @default(0)
-  stock       Int           @default(0)
-  taxRate     Decimal       @default(0) 
-  company     Company       @relation(fields: [companyId], references: [id])
-  companyId   String
-  invoiceItems InvoiceItem[]
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id           String        @id @default(uuid())
+  name         String
+  description  String?
+  sku          String?
+  price        Decimal       @default(0)
+  stock        Int           @default(0)
+  taxRate      Decimal       @default(0)
+  companyId    String
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  categoryId   String?
+  invoiceItems   InvoiceItem[]
+  stockMovements StockMovement[]
+  category       Category?     @relation(fields: [categoryId], references: [id])
+  company        Company       @relation(fields: [companyId], references: [id])
+}
+
+model Category {
+  id        String    @id @default(uuid())
+  name      String
+  companyId String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  company   Company   @relation(fields: [companyId], references: [id])
+  products  Product[]
 }
 
 model Invoice {
-  id            String        @id @default(uuid())
-  number        Int           @default(autoincrement()) 
-  date          DateTime      @default(now())
-  dueDate       DateTime?
-  status        InvoiceStatus @default(DRAFT)
-  subtotal      Decimal
-  tax           Decimal       @default(0)
-  total         Decimal
-  client        Client        @relation(fields: [clientId], references: [id])
-  clientId      String
-  company       Company       @relation(fields: [companyId], references: [id])
-  companyId     String
-  items         InvoiceItem[]
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  id        String        @id @default(uuid())
+  number    Int           @default(autoincrement())
+  date      DateTime      @default(now())
+  dueDate   DateTime?
+  status    InvoiceStatus @default(DRAFT)
+  subtotal  Decimal
+  tax       Decimal       @default(0)
+  total     Decimal
+  clientId  String
+  companyId String
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  client    Client        @relation(fields: [clientId], references: [id])
+  company        Company       @relation(fields: [companyId], references: [id])
+  items          InvoiceItem[]
+  stockMovements StockMovement[]
+  payments       Payment[]
 }
 
 model InvoiceItem {
   id        String  @id @default(uuid())
   quantity  Int
-  price     Decimal 
+  price     Decimal
   tax       Decimal @default(0)
-  total     Decimal 
-  product   Product @relation(fields: [productId], references: [id])
+  total     Decimal
   productId String
-  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
   invoiceId String
+  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id])
 }
 
 enum Role {
@@ -106,5 +125,48 @@ enum InvoiceStatus {
   DRAFT
   ISSUED
   PAID
+  PARTIAL
   CANCELLED
+}
+
+model Payment {
+  id        String        @id @default(uuid())
+  amount    Decimal
+  method    PaymentMethod
+  date      DateTime      @default(now())
+  note      String?
+  invoiceId String
+  invoice   Invoice       @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  companyId String
+  company   Company       @relation(fields: [companyId], references: [id])
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+enum PaymentMethod {
+  CASH
+  TRANSFER
+  CARD
+  CHECK
+  OTHER
+}
+
+model StockMovement {
+  id        String            @id @default(uuid())
+  productId String
+  product   Product           @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity  Int
+  type      StockMovementType
+  reason    String?
+  date      DateTime          @default(now())
+  companyId String
+  company   Company           @relation(fields: [companyId], references: [id])
+  invoiceId String?
+  invoice   Invoice?          @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+}
+
+enum StockMovementType {
+  IN
+  OUT
+  ADJUSTMENT
 }

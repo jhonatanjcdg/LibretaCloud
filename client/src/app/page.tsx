@@ -1,19 +1,18 @@
 "use client";
 
-import React from "react";
-import Image from "next/image";
 import { motion } from "framer-motion";
 import {
-  BarChart3,
-  ShieldCheck,
-  Zap,
-  Globe,
   ArrowRight,
+  BarChart3,
+  Globe,
   Menu,
+  ShieldCheck,
   X,
-  CreditCard,
-  LayoutDashboard
+  Zap
 } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import React from "react";
 
 export default function LandingPage() {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
@@ -30,23 +29,23 @@ export default function LandingPage() {
       {/* Navbar */}
       <nav className="fixed top-0 w-full z-50 glass">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2">
             <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center glow">
               <Zap className="text-white w-6 h-6" />
             </div>
             <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
               LibretaCloud
             </span>
-          </div>
+          </Link>
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-400">
-            <a href="#" className="hover:text-white transition-colors">Funcionalidades</a>
-            <a href="#" className="hover:text-white transition-colors">Precios</a>
-            <a href="#" className="hover:text-white transition-colors">Nosotros</a>
-            <button className="px-6 py-2.5 bg-white text-black rounded-full font-bold hover:bg-gray-200 transition-all">
+            <a href="#features" className="hover:text-white transition-colors">Funcionalidades</a>
+            <a href="#pricing" className="hover:text-white transition-colors">Precios</a>
+            <a href="#about" className="hover:text-white transition-colors">Nosotros</a>
+            <Link href="/auth/register" className="px-6 py-2.5 bg-white text-black rounded-full font-bold hover:bg-gray-200 transition-all">
               Probar Gratis
-            </button>
+            </Link>
           </div>
 
           {/* Mobile Toggle */}
@@ -54,6 +53,22 @@ export default function LandingPage() {
             {isMenuOpen ? <X /> : <Menu />}
           </button>
         </div>
+
+        {/* Mobile Menu */}
+        {isMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            className="md:hidden glass border-t border-white/10 px-6 py-8 flex flex-col gap-6"
+          >
+            <Link href="#features" onClick={() => setIsMenuOpen(false)} className="text-gray-400 hover:text-white transition-colors">Funcionalidades</Link>
+            <Link href="#pricing" onClick={() => setIsMenuOpen(false)} className="text-gray-400 hover:text-white transition-colors">Precios</Link>
+            <Link href="#about" onClick={() => setIsMenuOpen(false)} className="text-gray-400 hover:text-white transition-colors">Nosotros</Link>
+            <Link href="/auth/register" className="px-6 py-3 bg-white text-black rounded-xl font-bold text-center">
+              Probar Gratis
+            </Link>
+          </motion.div>
+        )}
       </nav>
 
       {/* Hero Section */}
@@ -79,12 +94,12 @@ export default function LandingPage() {
             </p>
 
             <div className="flex flex-wrap justify-center gap-4">
-              <button className="px-8 py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold text-lg flex items-center gap-2 transition-all glow group">
+              <Link href="/auth/register" className="px-8 py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold text-lg flex items-center gap-2 transition-all glow group">
                 Empezar Ahora <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </button>
-              <button className="px-8 py-4 glass text-white rounded-xl font-bold text-lg hover:bg-white/5 transition-all">
+              </Link>
+              <Link href="/dashboard" className="px-8 py-4 glass text-white rounded-xl font-bold text-lg hover:bg-white/5 transition-all">
                 Ver Demo
-              </button>
+              </Link>
             </div>
           </motion.div>
 
@@ -110,7 +125,7 @@ export default function LandingPage() {
       </section>
 
       {/* Features Grid */}
-      <section className="py-20 px-6 max-w-7xl mx-auto">
+      <section id="features" className="py-20 px-6 max-w-7xl mx-auto">
         <div className="grid md:grid-cols-3 gap-8">
           <FeatureCard
             icon={<BarChart3 className="w-8 h-8 text-indigo-400" />}
@@ -151,9 +166,9 @@ export default function LandingPage() {
             Únete a cientos de emprendedores que ya están automatizando su éxito.
             Prueba LibretaCloud gratis por 14 días.
           </p>
-          <button className="px-10 py-4 bg-white text-black rounded-xl font-bold text-xl hover:bg-gray-200 transition-all shadow-xl">
+          <Link href="/auth/register" className="px-10 py-4 bg-white text-black rounded-xl font-bold text-xl hover:bg-gray-200 transition-all shadow-xl inline-block mx-auto">
             Crear cuenta gratuita
-          </button>
+          </Link>
         </div>
       </section>
 

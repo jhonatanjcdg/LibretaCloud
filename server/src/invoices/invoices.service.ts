@@ -1,9 +1,9 @@
 
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { InvoiceStatus } from '@prisma/client';
+import { PrismaService } from 'src/prisma.service';
 import { CreateInvoiceDto, CreateInvoiceItemDto } from './dto/create-invoice.dto';
 import { UpdateInvoiceDto } from './dto/update-invoice.dto';
-import { PrismaService } from 'src/prisma.service';
-import { InvoiceStatus } from '@prisma/client';
 
 @Injectable()
 export class InvoicesService {
@@ -31,12 +31,21 @@ export class InvoicesService {
         include: { items: { include: { product: true } }, client: true }
       });
 
-      // 3. Subtract stock from products
+      // 3. Subtract stock from products and record movements
       for (const item of items) {
         await tx.product.update({
           where: { id: item.productId },
+          data: { stock: { decrement: item.quantity } }
+        });
+
+        await tx.stockMovement.create({
           data: {
-            stock: { decrement: item.quantity }
+            productId: item.productId,
+            quantity: item.quantity,
+            type: 'OUT',
+            reason: `Venta - Factura #${invoice.number}`,
+            companyId: invoice.companyId,
+            invoiceId: invoice.id,
           }
         });
       }
@@ -64,6 +73,17 @@ export class InvoicesService {
             where: { id: item.productId },
             data: { stock: { increment: item.quantity } }
           });
+
+          await tx.stockMovement.create({
+            data: {
+              productId: item.productId,
+              quantity: item.quantity,
+              type: 'IN',
+              reason: `Cancelación - Factura #${currentInvoice.number}`,
+              companyId: currentInvoice.companyId,
+              invoiceId: currentInvoice.id,
+            }
+          });
         }
       }
       else if (updateInvoiceDto.status && updateInvoiceDto.status !== 'CANCELLED' && currentInvoice.status === 'CANCELLED') {
@@ -81,6 +101,17 @@ export class InvoicesService {
             where: { id: item.productId },
             data: { stock: { decrement: item.quantity } }
           });
+
+          await tx.stockMovement.create({
+            data: {
+              productId: item.productId,
+              quantity: item.quantity,
+              type: 'OUT',
+              reason: `Reactivación - Factura #${currentInvoice.number}`,
+              companyId: currentInvoice.companyId,
+              invoiceId: currentInvoice.id,
+            }
+          });
         }
       }
 
@@ -91,6 +122,17 @@ export class InvoicesService {
             await tx.product.update({
               where: { id: item.productId },
               data: { stock: { increment: item.quantity } }
+            });
+
+            await tx.stockMovement.create({
+              data: {
+                productId: item.productId,
+                quantity: item.quantity,
+                type: 'IN',
+                reason: `Ajuste (Devolución) - Factura #${currentInvoice.number}`,
+                companyId: currentInvoice.companyId,
+                invoiceId: currentInvoice.id,
+              }
             });
           }
         }
@@ -111,6 +153,17 @@ export class InvoicesService {
             await tx.product.update({
               where: { id: item.productId },
               data: { stock: { decrement: item.quantity } }
+            });
+
+            await tx.stockMovement.create({
+              data: {
+                productId: item.productId,
+                quantity: item.quantity,
+                type: 'OUT',
+                reason: `Ajuste (Salida) - Factura #${currentInvoice.number}`,
+                companyId: currentInvoice.companyId,
+                invoiceId: currentInvoice.id,
+              }
             });
           }
         }
@@ -184,7 +237,12 @@ export class InvoicesService {
   findOne(id: string) {
     return this.prisma.invoice.findUnique({
       where: { id },
-      include: { client: true, items: { include: { product: true } }, company: true }
+      include: {
+        client: true,
+        items: { include: { product: true } },
+        company: true,
+        payments: true
+      }
     });
   }
 
@@ -204,6 +262,16 @@ export class InvoicesService {
             where: { id: item.productId },
             data: {
               stock: { increment: item.quantity }
+            }
+          });
+
+          await tx.stockMovement.create({
+            data: {
+              productId: item.productId,
+              quantity: item.quantity,
+              type: 'IN',
+              reason: `Eliminación de Factura #${invoice.number}`,
+              companyId: invoice.companyId,
             }
           });
         }

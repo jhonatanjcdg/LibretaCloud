@@ -7,4 +7,5 @@ export class CreateProductDto {
     stock: number;
     taxRate: number;
     companyId: string;
+    categoryId?: string;
 }

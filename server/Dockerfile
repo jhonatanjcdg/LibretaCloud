@@ -1,13 +1,13 @@
 
 # Base image
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 # Create app directory
 WORKDIR /app
 
 # Install app dependencies
 COPY package*.json ./
-RUN npm install
+RUN npm ci
 
 # Bundle app source
 COPY . .
@@ -19,7 +19,10 @@ RUN npx prisma generate
 RUN npm run build
 
 # Production image
-FROM node:18-alpine
+FROM node:20-alpine
+
+# Install openssl and libc6-compat for Prisma
+RUN apk add --no-cache openssl libc6-compat
 
 WORKDIR /app
 

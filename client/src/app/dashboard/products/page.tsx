@@ -1,13 +1,14 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
 import { fetchAPI } from "@/lib/api";
-import { Plus, Search, Archive, Edit2, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
+import { Archive, Edit2, Plus, Search, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export default function ProductsPage() {
     const [products, setProducts] = useState([]);
+    const [categories, setCategories] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<any>(null);
     const [searchTerm, setSearchTerm] = useState("");
@@ -16,11 +17,23 @@ export default function ProductsPage() {
         price: "",
         stock: "",
         description: "",
+        categoryId: "",
     });
 
     useEffect(() => {
         loadProducts();
+        loadCategories();
     }, []);
+
+    const loadCategories = async () => {
+        try {
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            const data = await fetchAPI(`/categories?companyId=${user.companyId}`);
+            setCategories(data);
+        } catch (error) {
+            console.error("Error loading categories", error);
+        }
+    };
 
     const loadProducts = async () => {
         try {
@@ -64,6 +77,7 @@ export default function ProductsPage() {
             price: product.price.toString(),
             stock: product.stock.toString(),
             description: product.description || "",
+            categoryId: product.categoryId || "",
         });
         setIsModalOpen(true);
     };
@@ -88,7 +102,7 @@ export default function ProductsPage() {
                 <button
                     onClick={() => {
                         setEditingProduct(null);
-                        setFormData({ name: "", price: "", stock: "", description: "" });
+                        setFormData({ name: "", price: "", stock: "", description: "", categoryId: "" });
                         setIsModalOpen(true);
                     }}
                     className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl font-bold transition-colors shadow-lg shadow-indigo-500/20"
@@ -143,7 +157,14 @@ export default function ProductsPage() {
                                 </div>
                             </div>
                             <h3 className="text-xl font-bold mb-1">{product.name}</h3>
-                            <p className="text-2xl font-bold text-indigo-400 mb-2">${Number(product.price).toFixed(2)}</p>
+                            <div className="flex items-center gap-2 mb-2">
+                                <p className="text-2xl font-bold text-indigo-400">${Number(product.price).toFixed(2)}</p>
+                                {product.category && (
+                                    <span className="text-xs px-2 py-1 bg-purple-500/10 text-purple-400 rounded-full border border-purple-500/20">
+                                        {product.category.name}
+                                    </span>
+                                )}
+                            </div>
                             <p className="text-gray-400 text-sm mb-4 line-clamp-2">{product.description || "Sin descripción"}</p>
                             <div className="flex items-center gap-2 text-sm text-gray-500">
                                 <span className="px-2 py-1 bg-white/5 rounded-md border border-white/5">Stock: {product.stock}</span>
@@ -177,6 +198,18 @@ export default function ProductsPage() {
                                 value={formData.description}
                                 onChange={e => setFormData({ ...formData, description: e.target.value })}
                             />
+                            <select
+                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none text-gray-300"
+                                value={formData.categoryId}
+                                onChange={e => setFormData({ ...formData, categoryId: e.target.value })}
+                            >
+                                <option value="" className="bg-[#111]">Sin Categoría</option>
+                                {categories.map((cat: any) => (
+                                    <option key={cat.id} value={cat.id} className="bg-[#111]">
+                                        {cat.name}
+                                    </option>
+                                ))}
+                            </select>
                             <div className="grid grid-cols-2 gap-4">
                                 <input
                                     placeholder="Precio"

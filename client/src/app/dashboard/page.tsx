@@ -1,11 +1,11 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
 import { fetchAPI } from "@/lib/api";
-import { TrendingUp, Package, Users, FileText, AlertTriangle } from "lucide-react";
 import { motion } from "framer-motion";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
+import { AlertTriangle, FileText, Package, TrendingUp, Users } from "lucide-react";
+import { useEffect, useState } from "react";
+import { CartesianGrid, Cell, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 export default function DashboardPage() {
     const [stats, setStats] = useState({ products: 0, clients: 0, invoices: 0, revenue: 0 });
@@ -21,11 +21,13 @@ export default function DashboardPage() {
 
     const loadData = async () => {
         try {
-            const [productsData, clientsData, invoicesData] = await Promise.all([
-                fetchAPI('/products'),
-                fetchAPI('/clients'),
-                fetchAPI('/invoices')
-            ]);
+            console.log("Fetching dashboard data...");
+            const productsData = await fetchAPI('/products');
+            console.log("Products loaded");
+            const clientsData = await fetchAPI('/clients');
+            console.log("Clients loaded");
+            const invoicesData = await fetchAPI('/invoices');
+            console.log("Invoices loaded");
 
             const totalRevenue = invoicesData
                 .filter((inv: any) => inv.status === 'PAID')
