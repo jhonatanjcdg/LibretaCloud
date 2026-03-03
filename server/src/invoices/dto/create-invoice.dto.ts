@@ -10,4 +10,5 @@ export class CreateInvoiceDto {
     items: CreateInvoiceItemDto[];
     dueDate?: string;
     status?: string; // DRAFT, ISSUED, PAID, CANCELLED
+    type?: string;   // INVOICE, CREDIT_NOTE, etc.
 }

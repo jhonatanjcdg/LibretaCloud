@@ -30,8 +30,12 @@ export class ProductsService {
     });
   }
 
-  findAll() {
+  findAll(companyId?: string) {
     return this.prisma.product.findMany({
+      where: {
+        deletedAt: null,
+        ...(companyId ? { companyId } : {})
+      },
       include: {
         company: true,
         category: true
@@ -39,11 +43,13 @@ export class ProductsService {
     });
   }
 
-  findOne(id: string) {
-    return this.prisma.product.findUnique({
-      where: { id },
+  async findOne(id: string) {
+    const product = await this.prisma.product.findFirst({
+      where: { id, deletedAt: null },
       include: { category: true }
     });
+    if (!product) throw new Error('Producto no encontrado');
+    return product;
   }
 
   update(id: string, updateProductDto: UpdateProductDto) {
@@ -54,15 +60,9 @@ export class ProductsService {
   }
 
   async remove(id: string) {
-    try {
-      return await this.prisma.product.delete({
-        where: { id },
-      });
-    } catch (error) {
-      if (error.code === 'P2003') {
-        throw new Error('No se puede eliminar el producto porque está incluido en facturas existentes.');
-      }
-      throw error;
-    }
+    return this.prisma.product.update({
+      where: { id },
+      data: { deletedAt: new Date() }
+    });
   }
 }

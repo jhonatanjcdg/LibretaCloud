@@ -1,8 +1,8 @@
 
 import { Injectable } from '@nestjs/common';
+import { PrismaService } from 'src/prisma.service';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
-import { PrismaService } from 'src/prisma.service';
 
 @Injectable()
 export class ClientsService {
@@ -14,16 +14,22 @@ export class ClientsService {
     });
   }
 
-  findAll() {
+  findAll(companyId?: string) {
     return this.prisma.client.findMany({
+      where: {
+        deletedAt: null,
+        ...(companyId ? { companyId } : {})
+      },
       include: { company: true }
     });
   }
 
-  findOne(id: string) {
-    return this.prisma.client.findUnique({
-      where: { id },
+  async findOne(id: string) {
+    const client = await this.prisma.client.findFirst({
+      where: { id, deletedAt: null },
     });
+    if (!client) throw new Error('Cliente no encontrado');
+    return client;
   }
 
   update(id: string, updateClientDto: UpdateClientDto) {
@@ -34,15 +40,9 @@ export class ClientsService {
   }
 
   async remove(id: string) {
-    try {
-      return await this.prisma.client.delete({
-        where: { id },
-      });
-    } catch (error) {
-      if (error.code === 'P2003') {
-        throw new Error('No se puede eliminar el cliente porque tiene facturas asociadas.');
-      }
-      throw error;
-    }
+    return this.prisma.client.update({
+      where: { id },
+      data: { deletedAt: new Date() }
+    });
   }
 }

@@ -15,7 +15,10 @@ export class CategoriesService {
 
     findAll(companyId?: string) {
         return this.prisma.category.findMany({
-            where: companyId ? { companyId } : {},
+            where: {
+                deletedAt: null,
+                ...(companyId ? { companyId } : {})
+            },
             include: {
                 _count: {
                     select: { products: true },
@@ -25,11 +28,13 @@ export class CategoriesService {
         });
     }
 
-    findOne(id: string) {
-        return this.prisma.category.findUnique({
-            where: { id },
+    async findOne(id: string) {
+        const category = await this.prisma.category.findFirst({
+            where: { id, deletedAt: null },
             include: { products: true },
         });
+        if (!category) throw new Error('Categoría no encontrada');
+        return category;
     }
 
     update(id: string, updateCategoryDto: UpdateCategoryDto) {
@@ -40,8 +45,9 @@ export class CategoriesService {
     }
 
     async remove(id: string) {
-        return await this.prisma.category.delete({
+        return this.prisma.category.update({
             where: { id },
+            data: { deletedAt: new Date() }
         });
     }
 }

@@ -10,16 +10,29 @@ export class InvoicesService {
   constructor(private prisma: PrismaService) { }
 
   async create(createInvoiceDto: CreateInvoiceDto) {
-    const { items, ...invoiceData } = createInvoiceDto;
+    const { items, type, ...invoiceData } = createInvoiceDto;
+    const docType: any = type || 'INVOICE';
 
     return this.prisma.$transaction(async (tx) => {
-      // 1. Calculate totals and CHECK STOCK (inside transaction)
+      // 1. Get next number for this company and type
+      const lastInvoice = await tx.invoice.findFirst({
+        where: {
+          companyId: createInvoiceDto.companyId,
+          type: docType
+        },
+        orderBy: { number: 'desc' },
+      });
+      const nextNumber = lastInvoice ? lastInvoice.number + 1 : 1;
+
+      // 2. Calculate totals and CHECK STOCK
       const totals = await this.calculateTotals(items, tx);
 
-      // 2. Create the invoice
+      // 3. Create the invoice
       const invoice = await tx.invoice.create({
         data: {
           ...invoiceData,
+          number: nextNumber,
+          type: docType,
           subtotal: totals.subtotal,
           tax: totals.totalTax,
           total: totals.total,
@@ -31,7 +44,7 @@ export class InvoicesService {
         include: { items: { include: { product: true } }, client: true }
       });
 
-      // 3. Subtract stock from products and record movements
+      // 4. Subtract stock
       for (const item of items) {
         await tx.product.update({
           where: { id: item.productId },
@@ -43,7 +56,7 @@ export class InvoicesService {
             productId: item.productId,
             quantity: item.quantity,
             type: 'OUT',
-            reason: `Venta - Factura #${invoice.number}`,
+            reason: `Venta - ${docType} #${invoice.number}`,
             companyId: invoice.companyId,
             invoiceId: invoice.id,
           }
@@ -222,8 +235,12 @@ export class InvoicesService {
     return { subtotal, totalTax, total: subtotal + totalTax, itemsData };
   }
 
-  findAll() {
+  findAll(companyId?: string) {
     return this.prisma.invoice.findMany({
+      where: {
+        deletedAt: null,
+        ...(companyId ? { companyId } : {})
+      },
       include: {
         client: true,
         items: {
@@ -234,9 +251,9 @@ export class InvoicesService {
     });
   }
 
-  findOne(id: string) {
-    return this.prisma.invoice.findUnique({
-      where: { id },
+  async findOne(id: string) {
+    const invoice = await this.prisma.invoice.findFirst({
+      where: { id, deletedAt: null },
       include: {
         client: true,
         items: { include: { product: true } },
@@ -244,11 +261,14 @@ export class InvoicesService {
         payments: true
       }
     });
+
+    if (!invoice) throw new NotFoundException('Factura no encontrada o eliminada');
+    return invoice;
   }
 
   async remove(id: string) {
-    const invoice = await this.prisma.invoice.findUnique({
-      where: { id },
+    const invoice = await this.prisma.invoice.findFirst({
+      where: { id, deletedAt: null },
       include: { items: true }
     });
 
@@ -270,14 +290,19 @@ export class InvoicesService {
               productId: item.productId,
               quantity: item.quantity,
               type: 'IN',
-              reason: `Eliminación de Factura #${invoice.number}`,
+              reason: `Venta eliminada - ${invoice.type} #${invoice.number}`,
               companyId: invoice.companyId,
+              invoiceId: invoice.id,
             }
           });
         }
       }
 
-      return tx.invoice.delete({ where: { id } });
+      // SOFT DELETE
+      return tx.invoice.update({
+        where: { id },
+        data: { deletedAt: new Date() }
+      });
     });
   }
 }
