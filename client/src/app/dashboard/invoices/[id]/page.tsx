@@ -12,6 +12,7 @@ export default function InvoiceDetailPage() {
     const router = useRouter();
     const [invoice, setInvoice] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [sendingEmail, setSendingEmail] = useState(false);
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
     const [paymentData, setPaymentData] = useState({
         amount: 0,
@@ -51,6 +52,20 @@ export default function InvoiceDetailPage() {
 
     const downloadPDF = () => {
         window.open(`http://localhost:4000/invoices/${params.id}/pdf`, '_blank');
+    };
+
+    const sendEmail = async () => {
+        setSendingEmail(true);
+        try {
+            await fetchAPI(`/email/invoice/${params.id}`, {
+                method: 'POST',
+            });
+            alert('¡Email enviado correctamente!');
+        } catch (error) {
+            alert('Error enviando email: ' + error);
+        } finally {
+            setSendingEmail(false);
+        }
     };
 
     if (loading) {
@@ -147,8 +162,17 @@ export default function InvoiceDetailPage() {
                 <button className="flex items-center gap-2 bg-white/5 hover:bg-white/10 px-4 py-2 rounded-xl transition-colors">
                     <Printer className="w-4 h-4" /> Imprimir
                 </button>
-                <button className="flex items-center gap-2 bg-white/5 hover:bg-white/10 px-4 py-2 rounded-xl transition-colors">
-                    <Mail className="w-4 h-4" /> Enviar por Email
+                <button
+                    onClick={sendEmail}
+                    disabled={sendingEmail}
+                    className="flex items-center gap-2 bg-white/5 hover:bg-white/10 px-4 py-2 rounded-xl transition-colors disabled:opacity-50"
+                >
+                    {sendingEmail ? (
+                        <div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin"></div>
+                    ) : (
+                        <Mail className="w-4 h-4" />
+                    )}
+                    {sendingEmail ? 'Enviando...' : 'Enviar por Email'}
                 </button>
 
                 {invoice.status === 'DRAFT' && (

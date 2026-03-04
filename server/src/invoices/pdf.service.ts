@@ -1,8 +1,8 @@
 
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/prisma.service';
-import * as PDFDocument from 'pdfkit';
 import axios from 'axios';
+import * as PDFDocument from 'pdfkit';
+import { PrismaService } from 'src/prisma.service';
 
 @Injectable()
 export class PdfService {
@@ -52,11 +52,21 @@ export class PdfService {
                 }
             }
 
+            const documentTypeName =
+                invoice.type === 'QUOTE' ? 'COTIZACIÓN' :
+                    invoice.type === 'CREDIT_NOTE' ? 'NOTA CRÉDITO' :
+                        invoice.type === 'DEBIT_NOTE' ? 'NOTA DÉBITO' : 'FACTURA ELECTRÓNICA';
+
+            const documentTypePrefix =
+                invoice.type === 'QUOTE' ? 'Cotización' :
+                    invoice.type === 'CREDIT_NOTE' ? 'Nota Crédito' :
+                        invoice.type === 'DEBIT_NOTE' ? 'Nota Débito' : 'Factura';
+
             doc
                 .fontSize(20)
-                .text('FACTURA ELECTRÓNICA', 120, 50, { align: 'right' })
+                .text(documentTypeName, 120, 50, { align: 'right' })
                 .fontSize(10)
-                .text(`Factura #${invoice.number || invoice.id.slice(0, 8)}`, 120, 80, { align: 'right' })
+                .text(`${documentTypePrefix} #${invoice.number || invoice.id.slice(0, 8)}`, 120, 80, { align: 'right' })
                 .text(`Fecha: ${new Date(invoice.createdAt).toLocaleDateString('es-ES')}`, 120, 95, { align: 'right' });
 
             // Company Info
